@@ -1,6 +1,7 @@
 import json
 import datetime
 import argparse
+import texttable
 
 
 feasable_kinds = ["record", "routine"]
@@ -36,9 +37,6 @@ def create():
     with open("data.json", "w") as file:
         json.dump(database, file, indent=4)
 
-
-
-
 def get_last_date(database):
     last_date = None
     for date in database:
@@ -46,7 +44,6 @@ def get_last_date(database):
         if last_date is None or current_date > last_date:
             last_date = current_date
     return last_date
-
 
 def insert(user_input):
 
@@ -104,8 +101,6 @@ def insert(user_input):
     with open("data.json", "w") as file:
         json.dump(database, file, indent=4)
 
-
-
 def add(user_input):
     today = datetime.date.today()
     kind = user_input.split(" ")[1] # record or routine
@@ -134,6 +129,43 @@ def add(user_input):
     # Save the updated database to the JSON file
     with open("data.json", "w") as file:
         json.dump(database, file, indent=4)
+
+def remove(user_input):
+    today = datetime.date.today()
+    kind = user_input.split(" ")[1] # record or routine
+    if not kind in feasable_kinds:
+        print("Invalid kind")
+        return
+    name = user_input.split(" ")[2]
+    with open("data.json", "r") as file:
+        database = json.load(file)
+    last_date = get_last_date(database)
+    current_date = today
+
+    # remove the record or routine from each day in the database
+    while current_date <= last_date:
+        database[str(current_date)][kind].pop(name)
+        current_date += datetime.timedelta(days=1)
+
+    # save the updated database to the JSON file    
+    with open("data.json", "w") as file:
+        json.dump(database, file, indent=4)
+
+    print(f'{name} {kind} removed from all days in the database. If you want to add it again, use "add {kind} {name}')
+
+def help():
+    print('''
+    add record <name>
+    add routine <name>
+    insert <date> record <name> <value>
+    insert <date> routine <name> <value>
+    remove <record/routine> <name>
+    report <date>
+    report today
+    report yesterday
+    report
+    quit
+    ''')
 
 def shortcut(user_input):
     # Load the database
@@ -185,7 +217,6 @@ def shortcut(user_input):
         json.dump(database, file, indent=4)
 
 
-import texttable
 
 # ...
 
@@ -244,6 +275,10 @@ def run():
                 break
             elif command == "report":
                 report(user_input)
+            elif command == 'remove':
+                remove(user_input)
+            elif command == 'help':
+                help()
             else:
                 shortcut(user_input)
         except Exception as e:
